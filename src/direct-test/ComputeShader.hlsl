@@ -64,39 +64,6 @@ void CSMain(uint3 groupID : SV_GroupID, uint3 dispatchID : SV_DispatchThreadID, 
         {
             continue;
         }
-        
-        float t1 = (-b - sqrt(D)) / (2.0 * a);
-        float t2 = (-b + sqrt(D)) / (2.0 * a);
-    
-        float t = min(t1, t2);
-    
-        float3 intersectionPoint;
-        intersectionPoint.x = origin.x + direction.x * t;
-        intersectionPoint.y = origin.y + direction.y * t;
-        intersectionPoint.z = origin.z + direction.z * t;
-        
-        if (all(lightPos >= particle.pos))
-        {
-            if (all(intersectionPoint <= particle.pos))
-            {
-                continue;
-            }
-            if (all(intersectionPoint >= lightPos))
-            {
-                continue;
-            }
-        }
-        else
-        {
-            if (all(intersectionPoint >= particle.pos))
-            {
-                continue;
-            }
-            if (all(intersectionPoint <= lightPos))
-            {
-                continue;
-            }
-        }
         sbShadows[index] *= 0.9;
     }
 }
