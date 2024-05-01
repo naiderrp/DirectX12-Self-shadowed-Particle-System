@@ -12,10 +12,10 @@ struct DeviceContext
 {
     DeviceContext(Win32Application& window, const std::vector<Particle>& particles);
 
-    DeviceContext(DeviceContext&) = delete;
+    DeviceContext(const DeviceContext&) = delete;
     DeviceContext(DeviceContext&&) = default;
 
-    DeviceContext& operator=(DeviceContext&) = delete;
+    DeviceContext& operator=(const DeviceContext&) = delete;
     DeviceContext& operator=(DeviceContext&&) = default;
 
     ~DeviceContext();
