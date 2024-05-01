@@ -6,10 +6,10 @@ class RenderSystem
 public:
 	RenderSystem(Win32Application& window);
 
-	RenderSystem(RenderSystem&) = delete;
+	RenderSystem(const RenderSystem&) = delete;
 	RenderSystem(RenderSystem&&) = default;
 
-	RenderSystem& operator=(RenderSystem&) = delete;
+	RenderSystem& operator=(const RenderSystem&) = delete;
 	RenderSystem& operator=(RenderSystem&&) = default;
 
 	~RenderSystem() = default;
