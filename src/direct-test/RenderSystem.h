@@ -31,14 +31,3 @@ private:
 
 	DeviceContext m_GPU;
 };
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
-{
-	Win32Application window = {};
-	window.Initialize(hInstance, nShowCmd);
-
-	RenderSystem particlesRender(window);
-	particlesRender.MainLoop();
-
-	return 0;
-}
