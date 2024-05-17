@@ -5,6 +5,7 @@ struct GS_OUTPUT
     float4 color    : COLOR;
     float shadow    : SHADOW;
     float radius    : RADIUS;
+    float opacity : OPACITY;
 };
 
 float4 PSMain(GS_OUTPUT input) : SV_TARGET
@@ -21,9 +22,9 @@ float4 PSMain(GS_OUTPUT input) : SV_TARGET
 
     float shadow = input.shadow;
     
-    float4 diffuseColor = input.color;
+    float3 diffuseColor = input.color.xyz;
     
-    float4 resultColor = diffuseColor * shadow;
+    float3 resultColor = diffuseColor * shadow;
     
-    return resultColor;
+    return float4(resultColor, input.opacity);
 }
