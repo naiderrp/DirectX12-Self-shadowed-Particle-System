@@ -4,6 +4,7 @@ struct VS_OUTPUT
     float4 color : COLOR;
     float shadow : SHADOW;
     float radius : RADIUS;
+    float opacity : OPACITY;
 };
 
 struct GS_OUTPUT
@@ -13,6 +14,7 @@ struct GS_OUTPUT
     float4 color : COLOR;
     float shadow : SHADOW;
     float radius : RADIUS;
+    float opacity : OPACITY;
 };
 
 cbuffer ConstantBuffer : register(b0)
@@ -60,6 +62,7 @@ void GSMain(point VS_OUTPUT input[1], inout TriangleStream<GS_OUTPUT> SpriteStre
         output.color = input[0].color;
         output.shadow = input[0].shadow;
         output.radius = input[0].radius;
+        output.opacity = input[0].opacity;
         
         SpriteStream.Append(output);
     }
