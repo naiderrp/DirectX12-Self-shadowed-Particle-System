@@ -10,6 +10,7 @@ struct VS_OUTPUT
     float4 color : COLOR;
     float shadow : SHADOW;
     float radius : RADIUS;
+    float opacity : OPACITY;
 };
 
 cbuffer ConstantBuffer : register(b0)
@@ -38,14 +39,18 @@ VS_OUTPUT VSMain(VS_INPUT input)
     output.color = input.color;
     output.radius = sbParticles[input.id].radius;
     
+    float opacity = sbParticles[input.id].opacity;
     float4 color = input.color;
     
     if (input.id == 1024) // light source
     {
         color = float4(1.0, 1.0, 1.0, 1.0);
+        opacity = 1.0f;
     }
     
     output.color = color;
+    output.opacity = opacity;
+    
     output.shadow = sbShadows[input.id];
     
     return output;
