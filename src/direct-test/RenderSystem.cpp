@@ -58,8 +58,16 @@ void RenderSystem::RecordDrawingCommands()
 
 void RenderSystem::Render()
 {
-    RunSimulation();
-    
+    static bool runOnce = true;
+
+    if (runOnce) {
+        RunSimulation();
+        
+        //ReadDataFromComputePipeline();
+
+        runOnce = false;
+    }
+
     RecordDrawingCommands();
 
     ID3D12CommandList* ppCommandLists[] = { m_GPU.m_CommandList.Get() };
