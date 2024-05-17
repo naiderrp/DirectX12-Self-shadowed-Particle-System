@@ -35,9 +35,8 @@ struct Particle
             particlesData[i].pos.z = center.z + delta.z;
 
             particlesData[i].radius = 20.0f;
-            particlesData[i].opacity = 1.0f;
+            particlesData[i].opacity = 0.1f;
         }
-
         return particlesData;
     }
 };
