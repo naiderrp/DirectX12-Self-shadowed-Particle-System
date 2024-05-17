@@ -1,6 +1,6 @@
 #include "DeviceContext.h"
 
-DeviceContext::DeviceContext(Win32Application& window, const std::vector<Particle>& particles) 
+DeviceContext::DeviceContext(Win32Application& window, const std::vector<Particle>& particles)
     : window(window), m_Particles(particles)
 {
     m_camera.Init({ 0.0f, 0.0f, 1500.0f });
@@ -259,11 +259,17 @@ void DeviceContext::CreateBufferResources()
 
     }
 
+    XMFLOAT3 sunPosition = XMFLOAT3(-700.0f, 500.0f, 0.0f);
+    
     {
-        // compute constant buffer
-
-        m_cbSunDir.sunDir = XMFLOAT3(-700, 500, 0);
-
+        // compute constant buffer      
+        
+        float normalizedX = sunPosition.x == 0.0f ? 0.0f : sunPosition.x / std::abs(sunPosition.x);
+        float normalizedY = sunPosition.y == 0.0f ? 0.0f : sunPosition.y / std::abs(sunPosition.y);
+        float normalizedZ = sunPosition.z == 0.0f ? 0.0f : sunPosition.z / std::abs(sunPosition.z);
+        
+        m_cbSunDir.sunDir = XMFLOAT3(normalizedX, normalizedY, normalizedZ);
+    
         m_Device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // this heap will be used to upload the constant buffer data
             D3D12_HEAP_FLAG_NONE, // no flags
@@ -303,8 +309,8 @@ void DeviceContext::CreateBufferResources()
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&m_sbParticlesUpload));
-    
-    m_Particles.back().pos = m_cbSunDir.sunDir; // light source
+
+    m_Particles.back().pos = sunPosition; // light source
     m_Particles.back().radius = 70.0f;
 
     D3D12_SUBRESOURCE_DATA particleData = {};
@@ -513,6 +519,18 @@ void DeviceContext::CreateGraphicsPSO()
     DXGI_SAMPLE_DESC sampleDesc = {};
     sampleDesc.Count = 1; // multisample count (no multisampling, so we just put 1, since we still need 1 sample)
 
+    D3D12_RENDER_TARGET_BLEND_DESC blendDesc;
+    blendDesc.BlendEnable = true;
+    blendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+    blendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    blendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+    blendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+    blendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
+    blendDesc.LogicOpEnable = false;
+    blendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+    blendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {}; // a structure to define a pso
     psoDesc.InputLayout = inputLayoutDesc; // the structure describing our input layout
     psoDesc.pRootSignature = m_GraphicsRootSignature.Get(); // the root signature that describes the input data this pso needs
@@ -524,7 +542,10 @@ void DeviceContext::CreateGraphicsPSO()
     psoDesc.SampleDesc = sampleDesc; // must be the same sample description as the swapchain and depth/stencil buffer
     psoDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT); // a default rasterizer state.
-    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT); // a default blent state.
+    //psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT); // a default blent state.
+    
+    psoDesc.BlendState.RenderTarget[0] = blendDesc;
+    
     psoDesc.NumRenderTargets = 1; // we are only binding one render target
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT); // a default depth stencil state
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
@@ -588,7 +609,7 @@ void DeviceContext::CreateComputePSO()
     };
 
     ID3DBlob* computeShader;
-    D3DCompileFromFile(L"ComputeShader.hlsl",
+    D3DCompileFromFile(L"ComputeShader_SunBasis.hlsl",
         defines,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         "CSMain",
@@ -616,7 +637,7 @@ void DeviceContext::CreateVertexBuffer()
     m_VertexList.resize(m_Particles.size());
 
     for (int i = 0; i < m_VertexList.size(); ++i) {
-        m_VertexList[i].color = XMFLOAT4(0.0, 1.0, 1.0, 1.0);
+        m_VertexList[i].color = XMFLOAT4(0.0, 1.0, 1.0, 1.0f);
     }
 
     int vBufferSize = sizeof(Vertex) * m_VertexList.size();
@@ -658,7 +679,7 @@ void DeviceContext::CreateDepthResources(uint32_t width, uint32_t height)
     dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     m_Device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsDescriptorHeap));
-    
+
     D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
     depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
     depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -695,7 +716,7 @@ void DeviceContext::CreateConstantBuffers()
             nullptr, // we do not have use an optimized clear value for constant buffers
             IID_PPV_ARGS(&m_constantBufferUploadHeaps[i])
         );
-        
+
         m_constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
 
         ZeroMemory(&m_cbPerObject, sizeof(m_cbPerObject));
@@ -741,7 +762,7 @@ void DeviceContext::WaitForPreviousFrame()
     if (m_Fence[frameIndex]->GetCompletedValue() < m_FenceValue[frameIndex])
     {
         m_Fence[frameIndex]->SetEventOnCompletion(m_FenceValue[frameIndex], m_FenceEvent);
-        
+
         // wait until the m_Fence has triggered the event that it's current value has reached "fenceValue". once it's value
         // has reached "fenceValue", we know the command queue has finished executing
         WaitForSingleObject(m_FenceEvent, INFINITE);
