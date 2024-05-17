@@ -41,9 +41,9 @@ void CSMain(uint3 groupID : SV_GroupID, uint3 dispatchID : SV_DispatchThreadID, 
         int sunDirZ = sunDir.z;
 
         float3 up;
-        up.x = (sunDirX != 0) ? sunDirX ^ (Sign(sunDirX) * 1) : sunDirX ^ 1;
-        up.y = (sunDirY != 0) ? sunDirY ^ (Sign(sunDirY) * 1) : sunDirY ^ 1;
-        up.z = (sunDirZ != 0) ? sunDirZ ^ (Sign(sunDirZ) * 1) : sunDirZ ^ 1;
+        up.x = sunDirX ^ (Sign(sunDirX) * 1);
+        up.y = sunDirY ^ (Sign(sunDirY) * 1);
+        up.z = sunDirZ ^ (Sign(sunDirZ) * 1);
         
         if (length(up) == 0.0f)
         {
@@ -102,5 +102,5 @@ void CSMain(uint3 groupID : SV_GroupID, uint3 dispatchID : SV_DispatchThreadID, 
 
 int Sign(float value)
 {
-    return value / abs(value);
+    return (value != 0) ? value / abs(value) : 1;
 }
